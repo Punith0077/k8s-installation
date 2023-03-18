@@ -1,0 +1,103 @@
+1.login as a root user
+
+sudo su -
+
+
+2.turn off swap space
+
+swapoff -a
+sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+
+3.install packages.to install k8s and containerd run these commands
+ 
+apt update -y
+apt-get install -y apt-transport-https -y
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+
+cat <<EOF >/etc/apt/sources.list.d/kubernetes.list
+deb https://apt.kubernetes.io/ kubernetes-xenial main
+EOF
+
+apt update -y
+
+apt install -y kubelet kubeadm containerd kubectl
+
+
+apt-mark hold will prevent the package from being automatically upgraded or removed
+apt-mark hold kubelet kubeadm kubectl containerd
+
+4.configure containerd.load the necessary modules of containerd
+
+cat <<EOF | sudo tee /etc/modules-load.d/containerd.conf
+overlay
+br_netfilter
+EOF
+
+modprobe overlay
+modprobe br_netfilter
+
+
+5.set up the required kernel parameters
+
+cat <<EOF | sudo tee /etc/sysctl.d/99-kubernetes-cri.conf 
+net.bridge.bridge-nf-call-iptables = 1
+net.bridge.bridge-nf-call-ip6tables = 1
+net.ipv4.ip_forward = 1
+EOF
+
+sysctl --system
+
+
+6.configure containerd
+
+mkdir -p /etc/containerd
+containerd config default | sudo tee /etc/containerd/config.toml
+systemctl restart containerd
+
+7.start and enable kubelet service
+enable and start kubelet service
+
+systemctl daemon-reload
+systemctl start kubelet
+systemctl enable kubelet.service
+
+
+
+.........................In Master Node Start.................................
+steps only for k8s master
+
+switch to the root user
+
+
+sudo su -
+
+...intialize k8s master by executing below command.
+
+kubeadm init
+
+IF Error
+sudo kubeadm init --cri-socket /run/containerd/containerd.sock
+
+exit
+
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+# To verify, if kubectl is working or not, run the following command.
+
+kubectl get pods -o wide -n kube-system
+
+#You will notice from the previous command, that all the pods are running except one: ‘core-dns’. For resolving this we will install a # pod network. To install the weave pod network, run the following command:
+
+kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+
+
+	
+kubectl get pods 
+kubectl get pods --all-namespaces
+
+
+# Get token
+
+kubeadm token create --print-join-command
