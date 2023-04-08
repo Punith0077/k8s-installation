@@ -1,0 +1,121 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: streaming-platform
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: streaming-platform
+  template:
+    metadata:
+      labels:
+        app: streaming-platform
+    spec:
+      containers:
+        - name: streaming-platform
+          image: <your-container-image>
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: aws-secrets
+                  key: access_key_id
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aws-secrets
+                  key: secret_access_key
+          ports:
+            - containerPort: 3000
+          volumeMounts:
+            - name: certs
+              mountPath: /etc/certs
+              readOnly: true
+      volumes:
+        - name: certs
+          secret:
+            secretName: streaming-platform-tls
+  # Example ingress configuration for routing traffic
+  ---
+  apiVersion: networking.k8s.io/v1
+  kind: Ingress
+  metadata:
+    name: streaming-platform-ingress
+  spec:
+    tls:
+      - secretName: streaming-platform-tls
+        hosts:
+          - streaming-platform.example.com
+    rules:
+      - host: streaming-platform.example.com
+        http:
+          paths:
+            - path: /
+              pathType: Prefix
+              backend:
+                service:
+                  name: streaming-platform-service
+                  port:
+                    name: http
+  # Example logging and monitoring configuration
+  ---
+  apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: logging-config
+  data:
+    log-level: info
+  ---
+  apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: monitoring-config
+  data:
+    monitoring-enabled: "true"
+  # Example auto-scaling configuration
+  ---
+  apiVersion: autoscaling/v2beta2
+  kind: HorizontalPodAutoscaler
+  metadata:
+    name: streaming-platform-hpa
+  spec:
+    scaleTargetRef:
+      apiVersion: apps/v1
+      kind: Deployment
+      name: streaming-platform
+    minReplicas: 3
+    maxReplicas: 10
+    metrics:
+      - type: Resource
+        resource:
+          name: cpu
+          targetAverageUtilization: 80
+  # Example security configuration
+  ---
+  apiVersion: v1
+  kind: Role
+  metadata:
+    name: streaming-platform-role
+  rules:
+    - apiGroups: [""]
+      resources: ["pods", "services", "deployments"]
+      verbs: ["get", "list", "watch"]
+  ---
+  apiVersion: v1
+  kind: RoleBinding
+  metadata:
+    name: streaming-platform-role-binding
+  roleRef:
+    kind: Role
+    name: streaming-platform-role
+    apiGroup: rbac.authorization.k8s.io
+  subjects:
+    - kind: ServiceAccount
+      name: streaming-platform-service-account
+      namespace: default
+  ---
+  apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    name: streaming-platform-service-account
