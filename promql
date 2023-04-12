@@ -1,0 +1,35 @@
+sum[prometheus_http_requets_total]
+sum[prometheus_http_requets_total] by (code)
+sum[node_cpu_seconds_total] by (mode)
+topk(3,sum[node_cpu_seconds_total] by (mode))
+bottomk(3,sum[node_cpu_seconds_total] by (mode))
+max(node_cpu_seconds_total)
+min(node_cpu_seconds_total)
+count(node_cpu_seconds_total)
+
+
+
+funtions rate and irate
+
+rate(prometheus_http_requets_total[1m])
+rate(prometheus_http_requets_total{handler=-"/api.*"}[1m])
+irate(prometheus_http_requets_total[1m])
+
+
+funtions changes,deriv,predict_linear
+
+changes(process_start_time_seconds{job='node_exporter'}[1h])
+deriv(process_resident_memory_bytes{job="prometheus"}[1h])
+predit_linear(node_memory_MemFree_bytes{job="node_exporter"}[1h],2*60*60)/1024/1024
+
+
+funtions----aggregate functions
+
+max_over_time(node_cpu_seconds_total[1h])
+min_over_time(node_cpu_seconds_total[1h])
+avg_over_time(node_cpu_seconds_total[1h])
+sort(node_cpu_seconds_total)
+sort_desc(node_cpu_seconds_total)
+time() - process-start_time_seconds{job="node_exporter"}
+day_of_week()
+day_of_month()
