@@ -64,3 +64,4 @@ here we see the grafana is running or not
 kubectl get svc grafana 
 if it is running grafana and after that you can configure the grafana server
 kubectl port-forward svc/grafana 3000:80 --address 0.0.0.0
+kubectl port-forward svc/prometheus-kube-prometheus-prometheus 9090:9090 --address 0.0.0.0
