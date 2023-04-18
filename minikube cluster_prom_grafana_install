@@ -65,3 +65,19 @@ kubectl get svc grafana
 if it is running grafana and after that you can configure the grafana server
 kubectl port-forward svc/grafana 3000:80 --address 0.0.0.0
 kubectl port-forward svc/prometheus-kube-prometheus-prometheus 9090:9090 --address 0.0.0.0
+
+
+
+
+some examples in k8s
+
+kubectl run redis --image=redis --dry-run=client -0 yml 
+kubectl run redis --image=redis --dry=client -o yml >redis.yml 
+
+when you add the replicas in yml file
+ex:
+kubectl replace -f replicaset-definition.yml
+kubectl scale --replicas=6 -f replicaset-definiton.yml
+kubectl scale rs replica-name --replica=5
+
+
