@@ -1,0 +1,30 @@
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 
+sudo install minikube-linux-amd64 /usr/local/bin/minikube
+sudo apt-get update
+sudo apt-get install docker.io -y
+sudo usermod -aG docker $USER
+exit
+sudo systemctl status docker
+minikube start --driver=docker
+minikube kubectl -- get pods -A
+sudo snap install kubectl --classic
+curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+chmod 700 get_helm.sh
+./get_helm.sh
+helm repo add stable https://charts.helm.sh/stable
+helm repo update
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm install prometheus prometheus-community/prometheus
+helm status prometheus
+helm repo add jaegertracing https://jaegertracing.github.io/helm-charts
+helm install jaeger-operator jaegertracing/jaeger-operator
+
+
+
+
+
+
+when open telemetry is deployed but svc is not showing in that time you this command
+
+kubectl create service clusterip otel-collector-svc --tcp=4317:4317
+kubectl patch svc otel-collector-svc -p '{"spec": {"type": "ClusterIP", "selector": {"app": "otel-collector"}, "ports": [{"name": "http", "port": 4317, "targetPort": 4317}]}}'
