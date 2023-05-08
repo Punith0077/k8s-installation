@@ -28,3 +28,15 @@ when open telemetry is deployed but svc is not showing in that time you this com
 
 kubectl create service clusterip otel-collector-svc --tcp=4317:4317
 kubectl patch svc otel-collector-svc -p '{"spec": {"type": "ClusterIP", "selector": {"app": "otel-collector"}, "ports": [{"name": "http", "port": 4317, "targetPort": 4317}]}}'
+
+
+
+here add the repo on helm
+helm repo add jaegertracing https://jaegertracing.github.io/helm-charts
+helm install jaegertracing jaegertracing/jaeger
+
+here add the repo on helm
+helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
+helm install \
+  opentelemetry-operator open-telemetry/opentelemetry-operator
+  
